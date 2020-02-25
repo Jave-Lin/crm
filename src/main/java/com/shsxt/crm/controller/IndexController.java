@@ -1,6 +1,7 @@
 package com.shsxt.crm.controller;
 
 import com.shsxt.base.BaseController;
+import com.shsxt.crm.exceptions.ParamsException;
 import com.shsxt.crm.service.UserService;
 import com.shsxt.crm.utils.LoginUserUtil;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,9 @@ public class IndexController extends BaseController {
     @RequestMapping("index")
 
     public String index(){
+        /*if (1==1){
+            throw new ParamsException("参数异常");
+        }*/
         return "index";
     }
 
@@ -24,7 +28,7 @@ public class IndexController extends BaseController {
     @RequestMapping("main")
     public String main(HttpServletRequest request){
         Integer userId = LoginUserUtil.releaseUserIdFromCookie(request);
-       request.setAttribute("user", userService.selectByPrimaryKey(userId));
+        request.setAttribute("user", userService.selectByPrimaryKey(userId));
         return "main";
     }
 }
