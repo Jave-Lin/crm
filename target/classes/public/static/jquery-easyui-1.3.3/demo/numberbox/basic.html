@@ -11,17 +11,19 @@
 </head>
 <body>
 	<h2>Basic NumberBox</h2>
-	<div class="demo-info">
-		<div class="demo-tip icon-tip"></div>
-		<div>The Box can only input number.</div>
+	<p>The NumberBox can only accept inputing numbers.</p>
+	<div style="margin:20px 0;"></div>
+	<div class="easyui-panel" style="width:100%;max-width:400px;padding:30px 60px;">
+		<div style="margin-bottom:20px">
+			<input class="easyui-numberbox" label="List Price:" labelPosition="top" precision="2" value="234.56" style="width:100%;">
+		</div>
+		<div style="margin-bottom:20px">
+			<input class="easyui-numberbox" label="Amount:" labelPosition="top" value="100" style="width:100%;">
+		</div>
+		<div style="margin-bottom:20px">
+			<input class="easyui-numberbox" label="Discount:" labelPosition="top" value="20" suffix="%" style="width:100%;">
+		</div>
 	</div>
-	<div style="margin:10px 0;"></div>
-	<input class="easyui-numberbox" required data-options="
-			onChange: function(value){
-				$('#vv').text(value);
-			}">
-	<div style="margin:10px 0;">
-		Value: <span id="vv"></span>
-	</div>
+	
 </body>
 </html>

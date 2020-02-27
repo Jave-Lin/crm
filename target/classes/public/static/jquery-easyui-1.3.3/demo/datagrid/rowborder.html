@@ -11,11 +11,8 @@
 </head>
 <body>
 	<h2>Row Border in DataGrid</h2>
-	<div class="demo-info">
-		<div class="demo-tip icon-tip"></div>
-		<div>This sample shows how to change the row border style of datagrid.</div>
-	</div>
-	<div style="margin:10px 0;">
+	<p>This sample shows how to change the row border style of datagrid.</p>
+	<div style="margin:20px 0;">
 		<span>Border:</span>
 		<select onchange="changeBorder(this.value)">
 			<option value="lines-both">Both</option>
@@ -27,7 +24,7 @@
 		<input type="checkbox" onclick="$('#dg').datagrid({striped:$(this).is(':checked')})">
 	</div>
 	<table id="dg" class="easyui-datagrid" title="Row Border in DataGrid" style="width:700px;height:250px"
-			data-options="singleSelect:true,fitColumns:true,url:'../datagrid/datagrid_data1.json'">
+			data-options="singleSelect:true,fitColumns:true,url:'datagrid_data1.json',method:'get'">
 		<thead>
 			<tr>
 				<th data-options="field:'itemid',width:80">Item ID</th>

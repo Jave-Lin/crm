@@ -12,7 +12,7 @@
                 <img alt="logo" src="${ctx}/static/images/bglogo.png">
             </td>
             <td valign="bottom" align="right" width="50%">
-                <font size="3">&nbsp;&nbsp;<strong>欢迎：</strong>${(user.userName)!""}</font>【${(user.trueName)!"" }】
+                <font size="3">&nbsp;&nbsp;<strong>欢迎：</strong>${(user.userName)!""}</font>【${(user.trueName)!"" }
             </td>
         </tr>
     </table>
