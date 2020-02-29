@@ -11,14 +11,16 @@
 </head>
 <body>
 	<h2>DataGrid Row Style</h2>
-	<p>The rows which listprice value is less than 30 are highlighted.</p>
-	<div style="margin:20px 0;"></div>
+	<div class="demo-info">
+		<div class="demo-tip icon-tip"></div>
+		<div>The rows which listprice value is less than 30 are highlighted.</div>
+	</div>
+	<div style="margin:10px 0;"></div>
 	<table class="easyui-datagrid" title="DataGrid Row Style" style="width:700px;height:250px"
 			data-options="
 				singleSelect: true,
 				iconCls: 'icon-save',
-				url: 'datagrid_data1.json',
-				method: 'get',
+				url: '../datagrid/datagrid_data1.json',
 				rowStyler: function(index,row){
 					if (row.listprice < 30){
 						return 'background-color:#6293BB;color:#fff;font-weight:bold;';

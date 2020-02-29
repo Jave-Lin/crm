@@ -1,14 +1,12 @@
 /**
- * EasyUI for jQuery 1.7.0
+ * window - jQuery EasyUI
  * 
- * Copyright (c) 2009-2018 www.jeasyui.com. All rights reserved.
+ * Copyright (c) 2009-2013 www.jeasyui.com. All rights reserved.
  *
- * Licensed under the freeware license: http://www.jeasyui.com/license_freeware.php
+ * Licensed under the GPL or commercial licenses
  * To use it on other terms please contact us: info@jeasyui.com
- *
- */
-/**
- * window - EasyUI for jQuery
+ * http://www.gnu.org/licenses/gpl.txt
+ * http://www.jeasyui.com/license_commercial.php
  * 
  * Dependencies:
  * 	 panel
@@ -17,6 +15,17 @@
  * 
  */
 (function($){
+	function setSize(target, param){
+		var opts = $.data(target, 'window').options;
+		if (param){
+			if (param.width) opts.width = param.width;
+			if (param.height) opts.height = param.height;
+			if (param.left != null) opts.left = param.left;
+			if (param.top != null) opts.top = param.top;
+		}
+		$(target).panel('resize', opts);
+	}
+	
 	function moveWindow(target, param){
 		var state = $.data(target, 'window');
 		if (param){
@@ -36,14 +45,17 @@
 	 *  center the window only horizontally
 	 */
 	function hcenter(target, tomove){
-		var opts = $.data(target, 'window').options;
-		var pp = $(target).window('panel');
-		var width = pp._outerWidth();
+		var state = $.data(target, 'window');
+		var opts = state.options;
+		var width = opts.width;
+		if (isNaN(width)){
+			width = state.window._outerWidth();
+		}
 		if (opts.inline){
-			var parent = pp.parent();
-			opts.left = Math.ceil((parent.width() - width) / 2 + parent.scrollLeft());
+			var parent = state.window.parent();
+			opts.left = (parent.width() - width) / 2 + parent.scrollLeft();
 		} else {
-			opts.left = Math.ceil(($(window)._outerWidth() - width) / 2 + $(document).scrollLeft());
+			opts.left = ($(window)._outerWidth() - width) / 2 + $(document).scrollLeft();
 		}
 		if (tomove){moveWindow(target);}
 	}
@@ -52,148 +64,128 @@
 	 * center the window only vertically
 	 */
 	function vcenter(target, tomove){
-		var opts = $.data(target, 'window').options;
-		var pp = $(target).window('panel');
-		var height = pp._outerHeight();
+		var state = $.data(target, 'window');
+		var opts = state.options;
+		var height = opts.height;
+		if (isNaN(height)){
+			height = state.window._outerHeight();
+		}
 		if (opts.inline){
-			var parent = pp.parent();
-			opts.top = Math.ceil((parent.height() - height) / 2 + parent.scrollTop());
+			var parent = state.window.parent();
+			opts.top = (parent.height() - height) / 2 + parent.scrollTop();
 		} else {
-			opts.top = Math.ceil(($(window)._outerHeight() - height) / 2 + $(document).scrollTop());
+			opts.top = ($(window)._outerHeight() - height) / 2 + $(document).scrollTop();
 		}
 		if (tomove){moveWindow(target);}
 	}
 	
 	function create(target){
 		var state = $.data(target, 'window');
-		var opts = state.options;
 		var win = $(target).panel($.extend({}, state.options, {
 			border: false,
 			doSize: true,	// size the panel, the property undefined in window component
 			closed: true,	// close the panel
-			cls: 'window ' + (!opts.border?'window-thinborder window-noborder ':(opts.border=='thin'?'window-thinborder ':'')) + (opts.cls || ''),
-			headerCls: 'window-header ' + (opts.headerCls || ''),
-			bodyCls: 'window-body ' + (opts.noheader ? 'window-body-noheader ' : ' ') + (opts.bodyCls||''),
+			cls: 'window',
+			headerCls: 'window-header',
+			bodyCls: 'window-body ' + (state.options.noheader ? 'window-body-noheader' : ''),
 			
 			onBeforeDestroy: function(){
-				if (opts.onBeforeDestroy.call(target) == false){return false;}
-				if (state.shadow){state.shadow.remove();}
-				if (state.mask){state.mask.remove();}
+				if (state.options.onBeforeDestroy.call(target) == false) return false;
+				if (state.shadow) state.shadow.remove();
+				if (state.mask) state.mask.remove();
 			},
 			onClose: function(){
-				if (state.shadow){state.shadow.hide();}
-				if (state.mask){state.mask.hide();}
-				opts.onClose.call(target);
+				if (state.shadow) state.shadow.hide();
+				if (state.mask) state.mask.hide();
+				
+				state.options.onClose.call(target);
 			},
 			onOpen: function(){
 				if (state.mask){
-					state.mask.css($.extend({
+					state.mask.css({
 						display:'block',
 						zIndex: $.fn.window.defaults.zIndex++
-					}, $.fn.window.getMaskSize(target)));
+					});
 				}
 				if (state.shadow){
 					state.shadow.css({
 						display:'block',
 						zIndex: $.fn.window.defaults.zIndex++,
-						left: opts.left,
-						top: opts.top,
+						left: state.options.left,
+						top: state.options.top,
 						width: state.window._outerWidth(),
 						height: state.window._outerHeight()
 					});
 				}
 				state.window.css('z-index', $.fn.window.defaults.zIndex++);
 				
-				opts.onOpen.call(target);
+				state.options.onOpen.call(target);
 			},
 			onResize: function(width, height){
-				var popts = $(this).panel('options');
-				$.extend(opts, {
-					width: popts.width,
-					height: popts.height,
-					left: popts.left,
-					top: popts.top
+				var opts = $(this).panel('options');
+				$.extend(state.options, {
+					width: opts.width,
+					height: opts.height,
+					left: opts.left,
+					top: opts.top
 				});
 				if (state.shadow){
 					state.shadow.css({
-						left: opts.left,
-						top: opts.top,
+						left: state.options.left,
+						top: state.options.top,
 						width: state.window._outerWidth(),
 						height: state.window._outerHeight()
 					});
 				}
-				opts.onResize.call(target, width, height);
+				
+				state.options.onResize.call(target, width, height);
 			},
 			onMinimize: function(){
-				if (state.shadow){state.shadow.hide();}
-				if (state.mask){state.mask.hide();}
+				if (state.shadow) state.shadow.hide();
+				if (state.mask) state.mask.hide();
+				
 				state.options.onMinimize.call(target);
 			},
 			onBeforeCollapse: function(){
-				if (opts.onBeforeCollapse.call(target) == false){return false;}
-				if (state.shadow){state.shadow.hide();}
+				if (state.options.onBeforeCollapse.call(target) == false) return false;
+				if (state.shadow) state.shadow.hide();
 			},
 			onExpand: function(){
-				if (state.shadow){state.shadow.show();}
-				opts.onExpand.call(target);
+				if (state.shadow) state.shadow.show();
+				state.options.onExpand.call(target);
 			}
 		}));
 		
 		state.window = win.panel('panel');
 		
 		// create mask
-		if (state.mask){state.mask.remove();}
-		if (opts.modal){
-			state.mask = $('<div class="window-mask" style="display:none"></div>').insertAfter(state.window);
+		if (state.mask) state.mask.remove();
+		if (state.options.modal == true){
+			state.mask = $('<div class="window-mask"></div>').insertAfter(state.window);
+			state.mask.css({
+				width: (state.options.inline ? state.mask.parent().width() : getPageArea().width),
+				height: (state.options.inline ? state.mask.parent().height() : getPageArea().height),
+				display: 'none'
+			});
 		}
 		
 		// create shadow
-		if (state.shadow){state.shadow.remove();}
-		if (opts.shadow){
-			state.shadow = $('<div class="window-shadow" style="display:none"></div>').insertAfter(state.window);
+		if (state.shadow) state.shadow.remove();
+		if (state.options.shadow == true){
+			state.shadow = $('<div class="window-shadow"></div>').insertAfter(state.window);
+			state.shadow.css({
+				display: 'none'
+			});
 		}
 		
-		// center and open the window
-		var closed = opts.closed;
-		if (opts.left == null){hcenter(target);}
-		if (opts.top == null){vcenter(target);}
+		// if require center the window
+		if (state.options.left == null){hcenter(target);}
+		if (state.options.top == null){vcenter(target);}
 		moveWindow(target);
-		if (!closed){win.window('open');}
-	}
-
-	function constrain(left, top, width, height){
-		var target = this;
-		var state = $.data(target, 'window');
-		var opts = state.options;
-		if (!opts.constrain){return {};}
-		if ($.isFunction(opts.constrain)){
-			return opts.constrain.call(target, left, top, width, height);
+		
+		if (state.options.closed == false){
+			win.window('open');	// open the window
 		}
-		var win = $(target).window('window');
-		var parent = opts.inline ? win.parent() : $(window);
-		if (left < 0){left = 0;}
-		if (top < parent.scrollTop()){top = parent.scrollTop();}
-		if (left + width > parent.width()){
-			if (width == win.outerWidth()){	// moving
-				left = parent.width() - width;
-			} else {	// resizing
-				width = parent.width() - left;
-			}
-		}
-		if (top - parent.scrollTop() + height > parent.height()){
-			if (height == win.outerHeight()){	// moving
-				top = parent.height() - height + parent.scrollTop();
-			} else {	// resizing
-				height = parent.height() - top + parent.scrollTop();
-			}
-		}
-
-		return {
-			left:left,
-			top:top,
-			width:width,
-			height:height
-		};
 	}
 	
 	
@@ -206,97 +198,116 @@
 		state.window.draggable({
 			handle: '>div.panel-header>div.panel-title',
 			disabled: state.options.draggable == false,
-			onBeforeDrag: function(e){
+			onStartDrag: function(e){
 				if (state.mask) state.mask.css('z-index', $.fn.window.defaults.zIndex++);
 				if (state.shadow) state.shadow.css('z-index', $.fn.window.defaults.zIndex++);
 				state.window.css('z-index', $.fn.window.defaults.zIndex++);
-			},
-			onStartDrag: function(e){
-				start1(e);
+				
+				if (!state.proxy){
+					state.proxy = $('<div class="window-proxy"></div>').insertAfter(state.window);
+				}
+				state.proxy.css({
+					display:'none',
+					zIndex: $.fn.window.defaults.zIndex++,
+					left: e.data.left,
+					top: e.data.top
+				});
+				state.proxy._outerWidth(state.window._outerWidth());
+				state.proxy._outerHeight(state.window._outerHeight());
+				setTimeout(function(){
+					if (state.proxy) state.proxy.show();
+				}, 500);
 			},
 			onDrag: function(e){
-				proc1(e);
+				state.proxy.css({
+					display:'block',
+					left: e.data.left,
+					top: e.data.top
+				});
 				return false;
 			},
 			onStopDrag: function(e){
-				stop1(e, 'move');
+				state.options.left = e.data.left;
+				state.options.top = e.data.top;
+				$(target).window('move');
+				state.proxy.remove();
+				state.proxy = null;
 			}
 		});
 		
 		state.window.resizable({
 			disabled: state.options.resizable == false,
 			onStartResize:function(e){
-				start1(e);
+				state.pmask = $('<div class="window-proxy-mask"></div>').insertAfter(state.window);
+				state.pmask.css({
+					zIndex: $.fn.window.defaults.zIndex++,
+					left: e.data.left,
+					top: e.data.top,
+					width: state.window._outerWidth(),
+					height: state.window._outerHeight()
+				});
+				if (!state.proxy){
+					state.proxy = $('<div class="window-proxy"></div>').insertAfter(state.window);
+				}
+				state.proxy.css({
+					zIndex: $.fn.window.defaults.zIndex++,
+					left: e.data.left,
+					top: e.data.top
+				});
+				state.proxy._outerWidth(e.data.width);
+				state.proxy._outerHeight(e.data.height);
 			},
 			onResize: function(e){
-				proc1(e);
+				state.proxy.css({
+					left: e.data.left,
+					top: e.data.top
+				});
+				state.proxy._outerWidth(e.data.width);
+				state.proxy._outerHeight(e.data.height);
 				return false;
 			},
 			onStopResize: function(e){
-				stop1(e, 'resize');
+				$.extend(state.options, {
+					left: e.data.left,
+					top: e.data.top,
+					width: e.data.width,
+					height: e.data.height
+				});
+				setSize(target);
+				state.pmask.remove();
+				state.pmask = null;
+				state.proxy.remove();
+				state.proxy = null;
 			}
 		});
-
-		function start1(e){
-			if (state.pmask){state.pmask.remove();}
-			state.pmask = $('<div class="window-proxy-mask"></div>').insertAfter(state.window);
-			state.pmask.css({
-				display: 'none',
-				zIndex: $.fn.window.defaults.zIndex++,
-				left: e.data.left,
-				top: e.data.top,
-				width: state.window._outerWidth(),
-				height: state.window._outerHeight()
-			});
-			if (state.proxy){state.proxy.remove();}
-			state.proxy = $('<div class="window-proxy"></div>').insertAfter(state.window);
-			state.proxy.css({
-				display: 'none',
-				zIndex: $.fn.window.defaults.zIndex++,
-				left: e.data.left,
-				top: e.data.top
-			});
-			state.proxy._outerWidth(e.data.width)._outerHeight(e.data.height);
-			state.proxy.hide();
-			setTimeout(function(){
-				if (state.pmask){state.pmask.show();}
-				if (state.proxy){state.proxy.show();}
-			}, 500);
-		}
-		function proc1(e){
-			$.extend(e.data, constrain.call(target, e.data.left, e.data.top, e.data.width, e.data.height));
-			state.pmask.show();
-			state.proxy.css({
-				display: 'block',
-				left: e.data.left,
-				top: e.data.top
-			});
-			state.proxy._outerWidth(e.data.width);
-			state.proxy._outerHeight(e.data.height);
-		}
-		function stop1(e, method){
-			$.extend(e.data, constrain.call(target, e.data.left, e.data.top, e.data.width+0.1, e.data.height+0.1));
-			$(target).window(method, e.data);
-			state.pmask.remove();
-			state.pmask = null;
-			state.proxy.remove();
-			state.proxy = null;
+	}
+	
+	function getPageArea() {
+		if (document.compatMode == 'BackCompat') {
+			return {
+				width: Math.max(document.body.scrollWidth, document.body.clientWidth),
+				height: Math.max(document.body.scrollHeight, document.body.clientHeight)
+			}
+		} else {
+			return {
+				width: Math.max(document.documentElement.scrollWidth, document.documentElement.clientWidth),
+				height: Math.max(document.documentElement.scrollHeight, document.documentElement.clientHeight)
+			}
 		}
 	}
-		
+	
 	// when window resize, reset the width and height of the window's mask
-	$(function(){
-		if (!$._positionFixed){
-			$(window).resize(function(){
-				$('body>div.window-mask:visible').css({
-					width: '',
-					height: ''
-				});
-				setTimeout(function(){
-					$('body>div.window-mask:visible').css($.fn.window.getMaskSize());
-				}, 50);
+	$(window).resize(function(){
+		$('body>div.window-mask').css({
+			width: $(window)._outerWidth(),
+			height: $(window)._outerHeight()
+		});
+		setTimeout(function(){
+			$('body>div.window-mask').css({
+				width: getPageArea().width,
+				height: getPageArea().height
 			});
-		}
+		}, 50);
 	});
 	
 	$.fn.window = function(options, param){
@@ -319,6 +330,7 @@
 					options: $.extend({}, $.fn.window.defaults, $.fn.window.parseOptions(this), options)
 				});
 				if (!state.options.inline){
+//					$(this).appendTo('body');
 					document.body.appendChild(this);
 				}
 			}
@@ -340,6 +352,11 @@
 		},
 		window: function(jq){
 			return $.data(jq[0], 'window').window;
+		},
+		resize: function(jq, param){
+			return jq.each(function(){
+				setSize(this, param);
+			});
 		},
 		move: function(jq, param){
 			return jq.each(function(){
@@ -364,20 +381,6 @@
 			});
 		}
 	};
-
-	$.fn.window.getMaskSize = function(target){
-		var state = $(target).data('window');
-		if (state && state.options.inline){
-			return {};
-		} else if ($._positionFixed){
-			return {position: 'fixed'};
-		} else {
-			return {
-				width: $(document).width(),
-				height: $(document).height()
-			};
-		}
-	};
 	
 	$.fn.window.parseOptions = function(target){
 		return $.extend({}, $.fn.panel.parseOptions(target), $.parser.parseOptions(target, [
@@ -392,7 +395,6 @@
 		resizable: true,
 		shadow: true,
 		modal: false,
-		border: true,	// possible values are: true,false,'thin','thick'
 		inline: false,	// true to stay inside its parent, false to go on top of all elements
 		
 		// window's property which difference from panel
@@ -401,17 +403,6 @@
 		minimizable: true,
 		maximizable: true,
 		closable: true,
-		closed: false,
-		constrain: false
-		/*
-		constrain: function(left,top,width,height){
-			return {
-				left:left,
-				top:top,
-				width:width,
-				height:height
-			};
-		}
-		*/
+		closed: false
 	});
 })(jQuery);

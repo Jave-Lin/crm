@@ -1,14 +1,12 @@
 /**
- * EasyUI for jQuery 1.7.0
+ * easyloader - jQuery EasyUI
  * 
- * Copyright (c) 2009-2018 www.jeasyui.com. All rights reserved.
+ * Copyright (c) 2009-2013 www.jeasyui.com. All rights reserved.
  *
- * Licensed under the freeware license: http://www.jeasyui.com/license_freeware.php
+ * Licensed under the GPL or commercial licenses
  * To use it on other terms please contact us: info@jeasyui.com
- *
- */
-/**
- * easyloader - EasyUI for jQuery
+ * http://www.gnu.org/licenses/gpl.txt
+ * http://www.jeasyui.com/license_commercial.php
  * 
  */
 (function(){
@@ -54,11 +52,6 @@
 			css:'propertygrid.css',
 			dependencies:['datagrid']
 		},
-		datalist:{
-			js:'jquery.datalist.js',
-			css:'datalist.css',
-			dependencies:['datagrid']
-		},
 		panel: {
 			js:'jquery.panel.js',
 			css:'panel.css'
@@ -76,7 +69,7 @@
 		messager:{
 			js:'jquery.messager.js',
 			css:'messager.css',
-			dependencies:['linkbutton','dialog','progressbar']
+			dependencies:['linkbutton','window','progressbar']
 		},
 		layout:{
 			js:'jquery.layout.js',
@@ -95,19 +88,15 @@
 			css:'tabs.css',
 			dependencies:['panel','linkbutton']
 		},
+		splitbutton:{
+			js:'jquery.splitbutton.js',
+			css:'splitbutton.css',
+			dependencies:['linkbutton','menu']
+		},
 		menubutton:{
 			js:'jquery.menubutton.js',
 			css:'menubutton.css',
 			dependencies:['linkbutton','menu']
-		},
-		splitbutton:{
-			js:'jquery.splitbutton.js',
-			css:'splitbutton.css',
-			dependencies:['menubutton']
-		},
-		switchbutton:{
-			js:'jquery.switchbutton.js',
-			css:'switchbutton.css'
 		},
 		accordion:{
 			js:'jquery.accordion.js',
@@ -118,38 +107,10 @@
 			js:'jquery.calendar.js',
 			css:'calendar.css'
 		},
-		textbox:{
-			js:'jquery.textbox.js',
-			css:'textbox.css',
-			dependencies:['validatebox','linkbutton']
-		},
-		passwordbox:{
-			js:'jquery.passwordbox.js',
-			css:'passwordbox.css',
-			dependencies:['textbox']
-		},
-		filebox:{
-			js:'jquery.filebox.js',
-			css:'filebox.css',
-			dependencies:['textbox']
-		},
-		radiobutton:{
-			js:'jquery.radiobutton.js',
-			css:'radiobutton.css'
-		},
-		checkbox:{
-			js:'jquery.checkbox.js',
-			css:'checkbox.css'
-		},
-		sidemenu:{
-			js:'jquery.sidemenu.js',
-			css:'sidemenu.css',
-			dependencies:['accordion','tree','tooltip']
-		},
 		combo:{
 			js:'jquery.combo.js',
 			css:'combo.css',
-			dependencies:['panel','textbox']
+			dependencies:['panel','validatebox']
 		},
 		combobox:{
 			js:'jquery.combobox.js',
@@ -164,14 +125,6 @@
 			js:'jquery.combogrid.js',
 			dependencies:['combo','datagrid']
 		},
-		combotreegrid:{
-			js:'jquery.combotreegrid.js',
-			dependencies:['combo','treegrid']
-		},
-		tagbox:{
-			js:'jquery.tagbox.js',
-			dependencies:['combobox']
-		},
 		validatebox:{
 			js:'jquery.validatebox.js',
 			css:'validatebox.css',
@@ -179,17 +132,17 @@
 		},
 		numberbox:{
 			js:'jquery.numberbox.js',
-			dependencies:['textbox']
+			dependencies:['validatebox']
 		},
 		searchbox:{
 			js:'jquery.searchbox.js',
 			css:'searchbox.css',
-			dependencies:['menubutton','textbox']
+			dependencies:['menubutton']
 		},
 		spinner:{
 			js:'jquery.spinner.js',
 			css:'spinner.css',
-			dependencies:['textbox']
+			dependencies:['validatebox']
 		},
 		numberspinner:{
 			js:'jquery.numberspinner.js',
@@ -219,9 +172,6 @@
 		},
 		parser:{
 			js:'jquery.parser.js'
-		},
-		mobile:{
-			js:'jquery.mobile.js'
 		}
 	};
 	

@@ -11,8 +11,11 @@
 </head>
 <body>
 	<h2>TreeGrid ContextMenu</h2>
-	<p>Right click to display the context menu.</p>
-	<div style="margin:20px 0;"></div>
+	<div class="demo-info">
+		<div class="demo-tip icon-tip"></div>
+		<div>Right click to display the context menu.</div>
+	</div>
+	<div style="margin:10px 0;"></div>
 	<table id="tg" class="easyui-treegrid" title="TreeGrid ContextMenu" style="width:700px;height:250px"
 			data-options="
 				iconCls: 'icon-ok',
@@ -20,8 +23,7 @@
 				animate: true,
 				collapsible: true,
 				fitColumns: true,
-				url: 'treegrid_data2.json',
-				method: 'get',
+				url: '../treegrid/treegrid_data2.json',
 				idField: 'id',
 				treeField: 'name',
 				onContextMenu: onContextMenu
@@ -55,14 +57,12 @@
 	    	}
 		}
 		function onContextMenu(e,row){
-			if (row){
-				e.preventDefault();
-				$(this).treegrid('select', row.id);
-				$('#mm').menu('show',{
-					left: e.pageX,
-					top: e.pageY
-				});				
-			}
+			e.preventDefault();
+			$(this).treegrid('select', row.id);
+			$('#mm').menu('show',{
+				left: e.pageX,
+				top: e.pageY
+			});
 		}
 		var idIndex = 100;
 		function append(){

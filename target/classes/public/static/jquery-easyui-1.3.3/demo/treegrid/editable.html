@@ -11,8 +11,11 @@
 </head>
 <body>
 	<h2>Editable TreeGrid</h2>
-	<p>Select one node and click edit button to perform editing.</p>
-	<div style="margin:20px 0;">
+	<div class="demo-info">
+		<div class="demo-tip icon-tip"></div>
+		<div>Select one node and click edit button to perform editing.</div>
+	</div>
+	<div style="margin:10px 0;">
 		<a href="javascript:void(0)" class="easyui-linkbutton" onclick="edit()">Edit</a>
 		<a href="javascript:void(0)" class="easyui-linkbutton" onclick="save()">Save</a>
 		<a href="javascript:void(0)" class="easyui-linkbutton" onclick="cancel()">Cancel</a>
@@ -24,8 +27,7 @@
 				animate: true,
 				collapsible: true,
 				fitColumns: true,
-				url: 'treegrid_data2.json',
-				method: 'get',
+				url: '../treegrid/treegrid_data2.json',
 				idField: 'id',
 				treeField: 'name',
 				showFooter: true

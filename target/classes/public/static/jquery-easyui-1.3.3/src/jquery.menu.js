@@ -1,43 +1,32 @@
 /**
- * EasyUI for jQuery 1.7.0
+ * menu - jQuery EasyUI
  * 
- * Copyright (c) 2009-2018 www.jeasyui.com. All rights reserved.
+ * Copyright (c) 2009-2013 www.jeasyui.com. All rights reserved.
  *
- * Licensed under the freeware license: http://www.jeasyui.com/license_freeware.php
+ * Licensed under the GPL or commercial licenses
  * To use it on other terms please contact us: info@jeasyui.com
- *
- */
-/**
- * menu - EasyUI for jQuery
- * 
+ * http://www.gnu.org/licenses/gpl.txt
+ * http://www.jeasyui.com/license_commercial.php
  */
 (function($){
-	$(function(){
-		$(document).unbind('.menu').bind('mousedown.menu', function(e){
-			var m = $(e.target).closest('div.menu,div.combo-p');
-			if (m.length){return}
-			$('body>div.menu-top:visible').not('.menu-inline').menu('hide');
-			hideMenu($('body>div.menu:visible').not('.menu-inline'));
-		});
-	});
 	
 	/**
 	 * initialize the target menu, the function can be invoked only once
 	 */
 	function init(target){
-		var opts = $.data(target, 'menu').options;
+		$(target).appendTo('body');
 		$(target).addClass('menu-top');	// the top menu
-		opts.inline ? $(target).addClass('menu-inline') : $(target).appendTo('body');
-		$(target).bind('_resize', function(e, force){
-			if ($(this).hasClass('easyui-fluid') || force){
-				$(target).menu('resize', target);
-			}
-			return false;
+		
+		$(document).unbind('.menu').bind('mousedown.menu', function(e){
+			var allMenu = $('body>div.menu:visible');
+			var m = $(e.target).closest('div.menu', allMenu);
+			if (m.length){return}
+			$('body>div.menu-top:visible').menu('hide');
 		});
 		
 		var menus = splitMenu($(target));
 		for(var i=0; i<menus.length; i++){
-			createMenu(target, menus[i]);
+			createMenu(menus[i]);
 		}
 		
 		function splitMenu(menu){
@@ -48,7 +37,7 @@
 				menu.children('div').each(function(){
 					var submenu = $(this).children('div');
 					if (submenu.length){
-						submenu.appendTo('body');
+						submenu.insertAfter(target);
 						this.submenu = submenu;		// point to the sub menu
 						var mm = splitMenu(submenu);
 						menus = menus.concat(mm);
@@ -57,129 +46,66 @@
 			}
 			return menus;
 		}
-	}
-
-	function createMenu(target, div){
-		var menu = $(div).addClass('menu');
-		if (!menu.data('menu')){
-			menu.data('menu', {
-				options: $.parser.parseOptions(menu[0], ['width','height'])
-			});
-		}
-		if (!menu.hasClass('menu-content')){
-			menu.children('div').each(function(){
-				createItem(target, this);
-			});
-			$('<div class="menu-line"></div>').prependTo(menu);
-		}
-		setMenuSize(target, menu);
-		if (!menu.hasClass('menu-inline')){
+		
+		function createMenu(menu){
+			var width = $.parser.parseOptions(menu[0], ['width']).width;
+			if (menu.hasClass('menu-content')){
+				menu[0].originalWidth = width || menu._outerWidth();
+			} else {
+				menu[0].originalWidth = width || 0;
+				menu.children('div').each(function(){
+					var item = $(this);
+					if (item.hasClass('menu-sep')){
+//						item.html('&nbsp;');
+					} else {
+						var itemOpts = $.extend({}, $.parser.parseOptions(this,['name','iconCls','href']), {
+							disabled: (item.attr('disabled') ? true : undefined)
+						});
+						item.attr('name',itemOpts.name || '').attr('href',itemOpts.href || '');
+						
+						var text = item.addClass('menu-item').html();
+						item.empty().append($('<div class="menu-text"></div>').html(text));
+						if (itemOpts.iconCls){
+							$('<div class="menu-icon"></div>').addClass(itemOpts.iconCls).appendTo(item);
+						}
+						if (itemOpts.disabled){
+							setDisabled(target, item[0], true);
+						}
+						if (item[0].submenu){
+							$('<div class="menu-rightarrow"></div>').appendTo(item);	// has sub menu
+						}
+						
+						bindMenuItemEvent(target, item);
+					}
+				});
+				$('<div class="menu-line"></div>').prependTo(menu);
+			}
+			setMenuWidth(target, menu);
 			menu.hide();
-		}
-		bindMenuEvent(target, menu);
-	}
-
-	/**
-	 * create the menu item
-	 */
-	function createItem(target, div, options){
-		var item = $(div);
-		var itemOpts = $.extend({}, $.parser.parseOptions(item[0], ['id','name','iconCls','href',{separator:'boolean'}]), {
-			disabled: (item.attr('disabled') ? true : undefined),
-			text: $.trim(item.html()),
-			onclick: item[0].onclick
-		}, options||{});
-		itemOpts.onclick = itemOpts.onclick || itemOpts.handler || null;
-		item.data('menuitem', {
-			options: itemOpts
-		});
-		if (itemOpts.separator){
-			item.addClass('menu-sep');
-		}
-		if (!item.hasClass('menu-sep')){
-			item.addClass('menu-item');
-			item.empty().append($('<div class="menu-text"></div>').html(itemOpts.text));
-			if (itemOpts.iconCls){
-				$('<div class="menu-icon"></div>').addClass(itemOpts.iconCls).appendTo(item);
-			}
-			if (itemOpts.id){
-				item.attr('id', itemOpts.id);
-			}
-			if (itemOpts.onclick){
-				if (typeof itemOpts.onclick == 'string'){
-					item.attr('onclick', itemOpts.onclick);
-				} else {
-					item[0].onclick = eval(itemOpts.onclick);
-				}
-			}
-			if (itemOpts.disabled){
-				setDisabled(target, item[0], true);
-			}
-			if (item[0].submenu){
-				$('<div class="menu-rightarrow"></div>').appendTo(item);	// has sub menu
-			}
+			
+			bindMenuEvent(target, menu);
 		}
 	}
 	
-	function setMenuSize(target, menu){
+	function setMenuWidth(target, menu){
 		var opts = $.data(target, 'menu').options;
-		var style = menu.attr('style') || '';
-		var isVisible = menu.is(':visible');
+		var d = menu.css('display');
 		menu.css({
 			display: 'block',
-			left: -10000,
-			height: 'auto',
-			overflow: 'hidden'
+			left:-10000
 		});
-		menu.find('.menu-item').each(function(){
-			$(this)._outerHeight(opts.itemHeight);
-			$(this).find('.menu-text').css({
-				height: (opts.itemHeight-2)+'px',
-				lineHeight: (opts.itemHeight-2)+'px'
-			});
-		});
-		menu.removeClass('menu-noline').addClass(opts.noline?'menu-noline':'');
 		
-		var mopts = menu.data('menu').options;
-		var width = mopts.width;
-		var height = mopts.height;
-		if (isNaN(parseInt(width))){
-			width = 0;
-			menu.find('div.menu-text').each(function(){
-				if (width < $(this).outerWidth()){
-					width = $(this).outerWidth();
-				}
-			});
-			// width += 40;
-			width = width ? width+40 : '';
-		}
-		var autoHeight = menu.outerHeight();
-		if (isNaN(parseInt(height))){
-			height = autoHeight;
-			if (menu.hasClass('menu-top') && opts.alignTo){
-				var at = $(opts.alignTo);
-				var h1 = at.offset().top - $(document).scrollTop();
-				var h2 = $(window)._outerHeight() + $(document).scrollTop() - at.offset().top - at._outerHeight();
-				height = Math.min(height, Math.max(h1, h2));
-			} else if (height > $(window)._outerHeight()){
-				height = $(window).height();
+		menu.find('div.menu-item')._outerHeight(22);
+		var width = 0;
+		menu.find('div.menu-text').each(function(){
+			if (width < $(this)._outerWidth()){
+				width = $(this)._outerWidth();
 			}
-		}
-
-		menu.attr('style', style);	// restore the original style
-		menu.show();
-		menu._size($.extend({}, mopts, {
-			width: width,
-			height: height,
-			minWidth: mopts.minWidth || opts.minWidth,
-			maxWidth: mopts.maxWidth || opts.maxWidth
-		}));
-		menu.find('.easyui-fluid').triggerHandler('_resize', [true]);
-		menu.css('overflow', menu.outerHeight() < autoHeight ? 'auto' : 'hidden');
-		menu.children('div.menu-line')._outerHeight(autoHeight-2);
-		if (!isVisible){
-			menu.hide();
-		}
+		});
+		width += 65;
+		menu._outerWidth(Math.max((menu[0].originalWidth || 0), width, opts.minWidth));
+		
+		menu.css('display', d);
 	}
 	
 	/**
@@ -187,33 +113,39 @@
 	 */
 	function bindMenuEvent(target, menu){
 		var state = $.data(target, 'menu');
-		var opts = state.options;
-		menu.unbind('.menu');
-		for(var event in opts.events){
-			menu.bind(event+'.menu', {target:target}, opts.events[event]);
-		}
-	}
-	function mouseenterHandler(e){
-		var target = e.data.target;
-		var state = $.data(target, 'menu');
-		if (state.timer){
-			clearTimeout(state.timer);
-			state.timer = null;
-		}
-	}
-	function mouseleaveHandler(e){
-		var target = e.data.target;
-		var state = $.data(target, 'menu');
-		if (state.options.hideOnUnhover){
+		menu.unbind('.menu').bind('mouseenter.menu', function(){
+			if (state.timer){
+				clearTimeout(state.timer);
+				state.timer = null;
+			}
+		}).bind('mouseleave.menu', function(){
 			state.timer = setTimeout(function(){
-				hideAll(target, $(target).hasClass('menu-inline'));
-			}, state.options.duration);
-		}
+				hideAll(target);
+			}, 100);
+		});
 	}
-	function mouseoverHandler(e){
-		var target = e.data.target;
-		var item = $(e.target).closest('.menu-item');
-		if (item.length){
+	
+	/**
+	 * bind menu item event
+	 */
+	function bindMenuItemEvent(target, item){
+		item.unbind('.menu');
+		item.bind('click.menu', function(){
+			if ($(this).hasClass('menu-item-disabled')){
+				return;
+			}
+			// only the sub menu clicked can hide all menus
+			if (!this.submenu){
+				hideAll(target);
+				var href = $(this).attr('href');
+				if (href){
+					location.href = href;
+				}
+			}
+			var item = $(target).menu('getItem', this);
+			$.data(target, 'menu').options.onClick.call(target, item);
+		}).bind('mouseenter.menu', function(e){
+			// hide other menu
 			item.siblings().each(function(){
 				if (this.submenu){
 					hideMenu(this.submenu);
@@ -223,7 +155,7 @@
 			// show this menu
 			item.addClass('menu-active');
 			
-			if (item.hasClass('menu-item-disabled')){
+			if ($(this).hasClass('menu-item-disabled')){
 				item.addClass('menu-active-disabled');
 				return;
 			}
@@ -235,11 +167,7 @@
 					parent: item
 				});
 			}
-		}
-	}
-	function mouseoutHandler(e){
-		var item = $(e.target).closest('.menu-item');
-		if (item.length){
+		}).bind('mouseleave.menu', function(e){
 			item.removeClass('menu-active menu-active-disabled');
 			var submenu = item[0].submenu;
 			if (submenu){
@@ -248,42 +176,22 @@
 				} else {
 					hideMenu(submenu);
 				}
+				
 			} else {
 				item.removeClass('menu-active');
 			}
-		}
-	}
-	function clickHandler(e){
-		var target = e.data.target;
-		var item = $(e.target).closest('.menu-item');
-		if (item.length){
-			var opts = $(target).data('menu').options;
-			var itemOpts = item.data('menuitem').options;
-			if (itemOpts.disabled){return;}
-			if (!item[0].submenu){
-				hideAll(target, opts.inline);
-				if (itemOpts.href){
-					location.href = itemOpts.href;
-				}
-			}
-			item.trigger('mouseenter');
-			opts.onClick.call(target, $(target).menu('getItem', item[0]));
-		}
+		});
 	}
 	
 	/**
 	 * hide top menu and it's all sub menus
 	 */
-	function hideAll(target, inline){
+	function hideAll(target){
 		var state = $.data(target, 'menu');
 		if (state){
 			if ($(target).is(':visible')){
 				hideMenu($(target));
-				if (inline){
-					$(target).show();
-				} else {
-					state.options.onHide.call(target);
-				}
+				state.options.onHide.call(target);
 			}
 		}
 		return false;
@@ -298,56 +206,43 @@
 	 * alignTo: the element object to align to
 	 */
 	function showMenu(target, param){
-		param = param || {};
 		var left,top;
-		var opts = $.data(target, 'menu').options;
 		var menu = $(param.menu || target);
-		$(target).menu('resize', menu[0]);
 		if (menu.hasClass('menu-top')){
-			$.extend(opts, param);
+			var opts = $.data(target, 'menu').options;
 			left = opts.left;
 			top = opts.top;
-			if (opts.alignTo){
-				var at = $(opts.alignTo);
+			if (param.alignTo){
+				var at = $(param.alignTo);
 				left = at.offset().left;
 				top = at.offset().top + at._outerHeight();
-				if (opts.align == 'right'){
-					left += at.outerWidth() - menu.outerWidth();
-				}
 			}
+			if (param.left != undefined){left = param.left}
+			if (param.top != undefined){top = param.top}
 			if (left + menu.outerWidth() > $(window)._outerWidth() + $(document)._scrollLeft()){
 				left = $(window)._outerWidth() + $(document).scrollLeft() - menu.outerWidth() - 5;
 			}
-			if (left < 0){left = 0;}
-			top = _fixTop(top, opts.alignTo);
+			if (top + menu.outerHeight() > $(window)._outerHeight() + $(document).scrollTop()){
+				top -= menu.outerHeight();
+			}
 		} else {
 			var parent = param.parent;	// the parent menu item
 			left = parent.offset().left + parent.outerWidth() - 2;
 			if (left + menu.outerWidth() + 5 > $(window)._outerWidth() + $(document).scrollLeft()){
 				left = parent.offset().left - menu.outerWidth() + 2;
 			}
-			top = _fixTop(parent.offset().top - 3);
-		}
-		
-		function _fixTop(top, alignTo){
+			var top = parent.offset().top - 3;
 			if (top + menu.outerHeight() > $(window)._outerHeight() + $(document).scrollTop()){
-				if (alignTo){
-					top = $(alignTo).offset().top - menu._outerHeight();
-				} else {
-					top = $(window)._outerHeight() + $(document).scrollTop() - menu.outerHeight();
-				}
+				top = $(window)._outerHeight() + $(document).scrollTop() - menu.outerHeight() - 5;
 			}
-			if (top < 0){top = 0;}
-			return top;
 		}
-		
-		menu.css(opts.position.call(target, menu[0], left, top));
+		menu.css({left:left,top:top});
 		menu.show(0, function(){
 			if (!menu[0].shadow){
 				menu[0].shadow = $('<div class="menu-shadow"></div>').insertAfter(menu);
 			}
 			menu[0].shadow.css({
-				display:(menu.hasClass('menu-inline')?'none':'block'),
+				display:'block',
 				zIndex:$.fn.menu.defaults.zIndex++,
 				left:menu.css('left'),
 				top:menu.css('top'),
@@ -356,21 +251,21 @@
 			});
 			menu.css('z-index', $.fn.menu.defaults.zIndex++);
 			if (menu.hasClass('menu-top')){
-				opts.onShow.call(target);
+				$.data(menu[0], 'menu').options.onShow.call(menu[0]);
 			}
 		});
 	}
 	
 	function hideMenu(menu){
-		if (menu && menu.length){
-			hideit(menu);
-			menu.find('div.menu-item').each(function(){
-				if (this.submenu){
-					hideMenu(this.submenu);
-				}
-				$(this).removeClass('menu-active');
-			});
-		}
+		if (!menu) return;
+		
+		hideit(menu);
+		menu.find('div.menu-item').each(function(){
+			if (this.submenu){
+				hideMenu(this.submenu);
+			}
+			$(this).removeClass('menu-active');
+		});
 		
 		function hideit(m){
 			m.stop(true,true);
@@ -381,59 +276,76 @@
 		}
 	}
 	
-	function findItem(target, param){
+	function findItem(target, text){
 		var result = null;
-		var fn = $.isFunction(param) ? param : function(item){
-			for(var p in param){
-				if (item[p] != param[p]){
-					return false;;
-				}
-			}
-			return true;
-		}
+		var tmp = $('<div></div>');
 		function find(menu){
 			menu.children('div.menu-item').each(function(){
-				var opts = $(this).data('menuitem').options;
-				if (fn.call(target, opts) == true){
-					result = $(target).menu('getItem', this);
+				var item = $(target).menu('getItem', this);
+				var s = tmp.empty().html(item.text).text();
+				if (text == $.trim(s)) {
+					result = item;
 				} else if (this.submenu && !result){
 					find(this.submenu);
 				}
 			});
 		}
 		find($(target));
+		tmp.remove();
 		return result;
 	}
 	
 	function setDisabled(target, itemEl, disabled){
 		var t = $(itemEl);
-		if (t.hasClass('menu-item')){
-			var opts = t.data('menuitem').options;
-			opts.disabled = disabled;
-			if (disabled){
-				t.addClass('menu-item-disabled');
-				t[0].onclick = null;
-			} else {
-				t.removeClass('menu-item-disabled');
-				t[0].onclick = opts.onclick;
+		
+		if (disabled){
+			t.addClass('menu-item-disabled');
+			if (itemEl.onclick){
+				itemEl.onclick1 = itemEl.onclick;
+				itemEl.onclick = null;
+			}
+		} else {
+			t.removeClass('menu-item-disabled');
+			if (itemEl.onclick1){
+				itemEl.onclick = itemEl.onclick1;
+				itemEl.onclick1 = null;
 			}
 		}
 	}
 	
 	function appendItem(target, param){
-		var opts = $.data(target, 'menu').options;
 		var menu = $(target);
 		if (param.parent){
 			if (!param.parent.submenu){
-				var submenu = $('<div></div>').appendTo('body');
+				var submenu = $('<div class="menu"><div class="menu-line"></div></div>').appendTo('body');
+				submenu.hide();
 				param.parent.submenu = submenu;
 				$('<div class="menu-rightarrow"></div>').appendTo(param.parent);
-				createMenu(target, submenu);
 			}
 			menu = param.parent.submenu;
 		}
-		var div = $('<div></div>').appendTo(menu);
-		createItem(target, div, param);
+		var item = $('<div class="menu-item"></div>').appendTo(menu);
+		$('<div class="menu-text"></div>').html(param.text).appendTo(item);
+		if (param.iconCls) $('<div class="menu-icon"></div>').addClass(param.iconCls).appendTo(item);
+		if (param.id) item.attr('id', param.id);
+		if (param.href) item.attr('href', param.href);
+		if (param.name) item.attr('name', param.name);
+		if (param.onclick){
+			if (typeof param.onclick == 'string'){
+				item.attr('onclick', param.onclick);
+			} else {
+				item[0].onclick = eval(param.onclick);
+			}
+		}
+		if (param.handler) item[0].onclick = eval(param.handler);
+		
+		bindMenuItemEvent(target, item);
+		
+		if (param.disabled){
+			setDisabled(target, item[0], true);
+		}
+		bindMenuEvent(target, menu);
+		setMenuWidth(target, menu);
 	}
 	
 	function removeItem(target, itemEl){
@@ -449,16 +361,6 @@
 			$(el).remove();
 		}
 		removeit(itemEl);
-	}
-	
-	function setVisible(target, itemEl, visible){
-		var menu = $(itemEl).parent();
-		if (visible){
-			$(itemEl).show();
-		} else {
-			$(itemEl).hide();
-		}
-		setMenuSize(target, menu);
 	}
 	
 	function destroyMenu(target){
@@ -520,8 +422,6 @@
 		 */
 		setText: function(jq, param){
 			return jq.each(function(){
-				var item = $(param.target).data('menuitem').options;
-				item.text = param.text;
 				$(param.target).children('div.menu-text').html(param.text);
 			});
 		},
@@ -534,10 +434,10 @@
 		 */
 		setIcon: function(jq, param){
 			return jq.each(function(){
-				var item = $(param.target).data('menuitem').options;
-				item.iconCls = param.iconCls;
-				$(param.target).children('div.menu-icon').remove();
-				if (param.iconCls){
+				var item = $(this).menu('getItem', param.target);
+				if (item.iconCls){
+					$(item.target).children('div.menu-icon').removeClass(item.iconCls).addClass(param.iconCls);
+				} else {
 					$('<div class="menu-icon"></div>').addClass(param.iconCls).appendTo(param.target);
 				}
 			});
@@ -554,19 +454,31 @@
 		 * }
 		 */
 		getItem: function(jq, itemEl){
-			var item = $(itemEl).data('menuitem').options;
-			return $.extend({}, item, {
-				target: $(itemEl)[0]
-			});
+			var t = $(itemEl);
+			var item = {
+				target: itemEl,
+				id: t.attr('id'),
+				text: $.trim(t.children('div.menu-text').html()),
+				disabled: t.hasClass('menu-item-disabled'),
+				href: t.attr('href'),
+				name: t.attr('name'),
+				onclick: itemEl.onclick
+			}
+			var icon = t.children('div.menu-icon');
+			if (icon.length){
+				var cc = [];
+				var aa = icon.attr('class').split(' ');
+				for(var i=0; i<aa.length; i++){
+					if (aa[i] != 'menu-icon'){
+						cc.push(aa[i]);
+					}
+				}
+				item.iconCls = cc.join(' ');
+			}
+			return item;
 		},
 		findItem: function(jq, text){
-			if (typeof text == 'string'){
-				return findItem(jq[0], function(item){
-					return $('<div>'+item.text+'</div>').text() == text;
-				});
-			} else {
-				return findItem(jq[0], text);
-			}
+			return findItem(jq[0], text);
 		},
 		/**
 		 * append menu item, the param contains following properties:
@@ -592,55 +504,18 @@
 			return jq.each(function(){
 				setDisabled(this, itemEl, true);
 			});
-		},
-		showItem: function(jq, itemEl){
-			return jq.each(function(){
-				setVisible(this, itemEl, true);
-			});
-		},
-		hideItem: function(jq, itemEl){
-			return jq.each(function(){
-				setVisible(this, itemEl, false);
-			});
-		},
-		resize: function(jq, menuEl){
-			return jq.each(function(){
-				setMenuSize(this, menuEl ? $(menuEl) : $(this));
-			});
 		}
 	};
 	
 	$.fn.menu.parseOptions = function(target){
-		return $.extend({}, $.parser.parseOptions(target, [
-		     {minWidth:'number',itemHeight:'number',duration:'number',hideOnUnhover:'boolean'},
-		     {fit:'boolean',inline:'boolean',noline:'boolean'}
-		]));
+		return $.extend({}, $.parser.parseOptions(target, ['left','top',{minWidth:'number'}]));
 	};
 	
 	$.fn.menu.defaults = {
 		zIndex:110000,
 		left: 0,
 		top: 0,
-		alignTo: null,
-		align: 'left',
-		minWidth: 150,
-		// itemHeight: 22,
-		itemHeight: 32,
-		duration: 100,	// Defines duration time in milliseconds to hide when the mouse leaves the menu.
-		hideOnUnhover: true,	// Automatically hides the menu when mouse exits it
-		inline: false,	// true to stay inside its parent, false to go on top of all elements
-		fit: false,
-		noline: false,
-		events: {
-			mouseenter: mouseenterHandler,
-			mouseleave: mouseleaveHandler,
-			mouseover: mouseoverHandler,
-			mouseout: mouseoutHandler,
-			click: clickHandler
-		},
-		position: function(target, left, top){
-			return {left:left,top:top}
-		},
+		minWidth: 120,
 		onShow: function(){},
 		onHide: function(){},
 		onClick: function(item){}

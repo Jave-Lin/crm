@@ -11,8 +11,11 @@
 </head>
 <body>
 	<h2>TreeGrid with Footer</h2>
-	<p>Show summary information on TreeGrid footer.</p>
-	<div style="margin:20px 0;"></div>
+	<div class="demo-info">
+		<div class="demo-tip icon-tip"></div>
+		<div>Show summary information on TreeGrid footer.</div>
+	</div>
+	<div style="margin:10px 0;"></div>
 	<table id="tg"></table>
 	<script type="text/javascript">
 		$(function(){
@@ -25,8 +28,7 @@
 				animate:true,
 				collapsible:true,
 				fitColumns:true,
-				url:'treegrid_data2.json',
-				method: 'get',
+				url:'../treegrid/treegrid_data2.json',
 				idField:'id',
 				treeField:'name',
 				showFooter:true,

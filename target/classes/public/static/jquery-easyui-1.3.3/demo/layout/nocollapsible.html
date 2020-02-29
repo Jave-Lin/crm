@@ -11,22 +11,25 @@
 </head>
 <body>
 	<h2>No collapsible button in Layout</h2>
-	<p>The layout region panel has no collapsible button.</p>
-	<div style="margin:20px 0;"></div>
+	<div class="demo-info">
+		<div class="demo-tip icon-tip"></div>
+		<div>The layout region panel has no collapsible button.</div>
+	</div>
+	<div style="margin:10px 0;"></div>
 	<div class="easyui-layout" style="width:700px;height:350px;">
 		<div data-options="region:'north'" style="height:50px"></div>
 		<div data-options="region:'south',split:true" style="height:50px;"></div>
 		<div data-options="region:'east',split:true,title:'East',collapsible:false" style="width:250px;">
-			<table id="tt" class="easyui-propertygrid" data-options="
-						url: 'propertygrid_data1.json',
-						method: 'get',
+			<table id="tt" class="easyui-propertygrid"
+					data-options="
+						url: '../layout/propertygrid_data1.json',
 						showGroup: true,
 						fit: true,
 						border: false
 					">
 			</table>
 		</div>
-		<div data-options="region:'center',title:'Main Title',iconCls:'icon-ok',href:'_content.html'" style="padding:10px">
+		<div data-options="region:'center',title:'Main Title',iconCls:'icon-ok',href:'../layout/_content.html'" style="padding:10px">
 		</div>
 	</div>
 
